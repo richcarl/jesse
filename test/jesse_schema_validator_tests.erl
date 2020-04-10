@@ -331,6 +331,54 @@ data_invalid_any_of_test_draft(URI) ->
      jesse_schema_validator:validate(Schema, Json, [])
     ).
 
+external_format_validator_test() ->
+  [ external_format_validator_test_draft(URI)
+    || URI <- [ <<"http://json-schema.org/draft-03/schema#">>
+              , <<"http://json-schema.org/draft-04/schema#">>
+              ]
+  ].
+
+external_format_validator_test_draft(URI) ->
+  CustomFormatSchema = [
+    {<<"type">>, <<"string">>},
+    {<<"format">>, <<"ipv4_and_port">>}
+  ],
+
+  Schema = {[
+    {<<"$schema">>, URI},
+    {<<"type">>, <<"object">>},
+    {<<"properties">>, {[
+      {<<"foo">>, CustomFormatSchema}
+    ]}}
+  ]},
+
+  Options = [{
+    external_format_validators,
+    [{<<"ipv4_and_port">>, fun(<<"127.0.0.1:1234">>) -> ok; (_Else) -> error end}]
+  }],
+
+  ValidJson = {[
+    {<<"foo">>, <<"127.0.0.1:1234">>}
+  ]},
+
+  ?assertEqual(
+    {ok, ValidJson},
+    jesse_schema_validator:validate(Schema, ValidJson, Options)
+  ),
+
+  InvalidJson = {[
+    {<<"foo">>, <<"Hello, Joe!">>}
+  ]},
+
+  ?assertThrow([{
+    data_invalid,
+    CustomFormatSchema,
+    wrong_format,
+    <<"Hello, Joe!">>,
+    [<<"foo">>]
+  }],
+  jesse_schema_validator:validate(Schema, InvalidJson, Options)).
+
 -ifndef(erlang_deprecated_types).
 -ifndef(COMMON_TEST).  % see Emakefile
 map_schema_test() ->
@@ -372,6 +420,13 @@ map_schema_test_draft(URI) ->
 
 map_data_test() ->
   test_all_drafts(fun map_data_test_draft/1).
+
+map_external_format_validator_test() ->
+  [ map_external_format_validator_test_draft(URI)
+    || URI <- [ <<"http://json-schema.org/draft-03/schema#">>
+              , <<"http://json-schema.org/draft-04/schema#">>
+              ]
+  ].
 
 map_data_test_draft(URI) ->
   Schema = {[ {<<"$schema">>, URI}
@@ -650,6 +705,46 @@ contains_with_boolean_value_test() ->
               ).
 
 
+map_external_format_validator_test_draft(URI) ->
+  CustomFormatSchema = #{
+    <<"type">> => <<"string">>,
+    <<"format">> => <<"ipv4_and_port">>
+  },
+
+  Schema = #{
+    <<"$schema">> => URI,
+    <<"type">> => <<"object">>,
+    <<"properties">> => #{
+      <<"foo">> => CustomFormatSchema
+    }
+  },
+
+  Options = [{
+    external_format_validators,
+    #{<<"ipv4_and_port">> => fun(<<"127.0.0.1:1234">>) -> ok; (_Else) -> error end}
+  }],
+
+  ValidJson = #{
+    <<"foo">> => <<"127.0.0.1:1234">>
+  },
+  ?assertEqual(
+    {ok, ValidJson},
+    jesse_schema_validator:validate(Schema, ValidJson, Options)
+  ),
+
+  InvalidJson = #{
+    <<"foo">> => <<"Hello, Joe!">>
+  },
+
+  ?assertThrow([{
+    data_invalid,
+    CustomFormatSchema,
+    wrong_format,
+    <<"Hello, Joe!">>,
+    [<<"foo">>]
+  }],
+  jesse_schema_validator:validate(Schema, InvalidJson, Options)).
 
 -endif.
 -endif.
+
