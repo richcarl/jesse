@@ -279,13 +279,23 @@ ErrorType}` where
   `{wrong_type_dependency, Dependency}`.
 
 ## Custom string format validators
-Built-in format validators, like `ipv4`, `date-time` are often not enough for `string` type 
-and usage of pattern (regexps) is not convenient.
-
-Custom string format validator could be used with `{external_format_validators, Validators}` option.
-* `Validators` is a map of `CustomFormatName => ValidationFunction` pairs (`proplists` are also supported)
-* `CustomFormatName` is a string that must be used in schema as a `format` value for `string` type
-* `ValidationFunction` takes `string` value and must return `ok` or `error` atom indicating validation result
+Built-in standard format validators, like `"format": "ipv4"` and
+`"format": "date-time"` are often not enough, and `pattern` assertions using
+regexps are also quite limited. Therefore, custom format validation may be added
+using the option `{external_format_validators, Validators}`, where
+* `Validators` is a map of `CustomFormatName => ValidationFunction` pairs
+  (`proplists` are also supported)
+* `CustomFormatName` is a utf8-string occurring in the schema in `"format":
+  "<name>"` declarations
+* `ValidationFunction` takes a json value and must return `ok` or `error` atom
+  indicating the validation result
+* The format validation is NOT guaranteed to run in any particular order
+  relative to other assertions. E.g., if both a `format` and a `pattern`
+  assertion are specified, these may be executed in any order, and the
+  implementation of the format check cannot assume that malformed input has
+  already been rejected by a pattern check.
+* Note that although format validation is mainly done on string values, it may
+  be applied to any type of value in a JSON schema.
 
 Simple example:
 ```erlang
