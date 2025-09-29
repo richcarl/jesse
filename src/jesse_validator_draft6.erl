@@ -967,8 +967,8 @@ check_format(Value, _Format = <<"uri">>, State) when is_binary(Value) ->
   State;
 check_format(Value, <<"uri-reference">>, State) when is_binary(Value) ->
   uri_reference(Value, State);
-check_format(_Value, _Format, State) ->
-  State.
+check_format(Value, Format, State) ->
+  maybe_external_check_format(Value, Format, State).
 
 -ifdef(OTP_RELEASE).
 uri_reference(Value, State) when is_binary(Value) ->
@@ -1309,6 +1309,17 @@ maybe_external_check_value(Value, State) ->
       State;
     Fun ->
       Fun(Value, State)
+  end.
+
+maybe_external_check_format(Value, Format, State) ->
+  case jesse_state:get_external_format_validator(Format, State) of
+    undefined -> State;
+    Fun when is_function(Fun, 1) ->
+      case Fun(Value) of
+        ok -> State;
+        error ->
+          handle_data_invalid(?wrong_format, Value, State)
+      end
   end.
 
 %% @private
