@@ -423,14 +423,21 @@ load_schema(#state{schema_loader_fun = LoaderFun}, SchemaURI) ->
 get_external_validator(#state{external_validator = Fun}) ->
   Fun.
 
--spec get_external_format_validator(binary(), state()) -> jesse:external_format_validator() | undefined.
+-spec get_external_format_validator(binary(), state()) ->
+        jesse:external_format_validator() | undefined.
 -ifndef(erlang_deprecated_types).
-get_external_format_validator(Format, #state{external_format_validators = Validators}) when is_map(Validators) ->
+get_external_format_validator(Format,
+                              #state{external_format_validators = Validators})
+  when is_map(Validators) ->
   maps:get(Format, Validators, undefined);
-get_external_format_validator(Format, #state{external_format_validators = Validators}) when is_list(Validators) ->
+get_external_format_validator(Format,
+                              #state{external_format_validators = Validators})
+  when is_list(Validators) ->
   proplists:get_value(Format, Validators, undefined).
 -else.
-get_external_format_validator(Format, #state{external_format_validators = Validators}) when is_list(Validators) ->
+get_external_format_validator(Format,
+                              #state{external_format_validators = Validators})
+  when is_list(Validators) ->
   proplists:get_value(Format, Validators, undefined).
 -endif.
 

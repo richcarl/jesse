@@ -76,8 +76,9 @@
 -type external_format_validator() :: fun((json_term()) -> ok | error).
 
 -ifndef(erlang_deprecated_types).
--type external_format_validators() :: [{binary(), external_format_validator()}]
-                                    | #{binary() => external_format_validator()}.
+-type external_format_validators()
+ :: [{binary(), external_format_validator()}]
+  | #{binary() => external_format_validator()}.
 -else.
 -type external_format_validators() :: [{binary(), external_format_validator()}].
 -endif.
